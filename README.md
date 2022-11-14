@@ -10,7 +10,7 @@ Create a token cache. Only one instance per Verticle or process.
    TokenCache tokenCache = TokenCache.create(1000);
 ```
 
-For each request (per request, per tenant), create an `TokenClient`:
+For each request (per request, per tenant), create a `TokenClient`:
 
 ```java
    String okapiUrl = "...";
