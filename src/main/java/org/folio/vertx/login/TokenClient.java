@@ -23,7 +23,7 @@ public class TokenClient {
   private final String okapiUrl;
   private final String tenant;
   private final String username;
-  private final String password;
+  private final Supplier<Future<String>> getPasswordSupplier;
 
   /**
    * Refresh legacy tokens older than this.
@@ -35,13 +35,14 @@ public class TokenClient {
    */
   private static final long AGE_DIFF_TOKEN = 10L;
 
-  public TokenClient(String okapiUrl, WebClient client, TokenCache cache, String tenant, String username, String password) {
+  public TokenClient(String okapiUrl, WebClient client, TokenCache cache, String tenant, String username,
+          Supplier<Future<String>> getPasswordSupplier) {
     this.cache = cache;
     this.client = client;
     this.okapiUrl = okapiUrl;
     this.tenant = tenant;
     this.username = username;
-    this.password = password;
+    this.getPasswordSupplier = getPasswordSupplier;
   }
 
   Future<String> getTokenLegacy(JsonObject payload) {
@@ -53,7 +54,9 @@ public class TokenClient {
             throw new RuntimeException(res.bodyAsString());
           }
           String token = res.getHeader(XOkapiHeaders.TOKEN);
-          cache.put(tenant, username, token, System.currentTimeMillis() + AGE_LEGACY_TOKEN * 1000);
+          if (cache != null) {
+            cache.put(tenant, username, token, System.currentTimeMillis() + AGE_LEGACY_TOKEN * 1000);
+          }
           return token;
         });
   }
@@ -73,7 +76,9 @@ public class TokenClient {
                   if (age < 0L) {
                     age = 0L;
                   }
-                  cache.put(tenant, username, cookie.value(), System.currentTimeMillis() + age * 1000);
+                  if (cache != null) {
+                    cache.put(tenant, username, cookie.value(), System.currentTimeMillis() + age * 1000);
+                  }
                   return cookie.value();
                 }
               }
@@ -88,21 +93,25 @@ public class TokenClient {
   }
 
   public Future<String> getToken() {
-    String cacheValue;
-    try {
-      cacheValue = cache.get(tenant, username);
-    } catch (Exception e) {
-      log.warn("Failed to access TokenCache {}", e.getMessage(), e);
-      return Future.failedFuture("Failed to access TokenCache");
+    if (cache != null) {
+      String cacheValue;
+      try {
+        cacheValue = cache.get(tenant, username);
+      } catch (Exception e) {
+        log.warn("Failed to access TokenCache {}", e.getMessage(), e);
+        return Future.failedFuture("Failed to access TokenCache");
+      }
+      if (cacheValue != null) {
+        return Future.succeededFuture(cacheValue);
+      }
     }
-    if (cacheValue != null) {
-      return Future.succeededFuture(cacheValue);
-    }
-    JsonObject payload = new JsonObject()
-            .put("username", username)
-            .put("password", password);
-    return getTokenWithExpiry(payload)
-            .compose(res -> res != null ? Future.succeededFuture(res) : getTokenLegacy(payload));
+    return getPasswordSupplier.get().compose(password -> {
+      JsonObject payload = new JsonObject()
+              .put("username", username)
+              .put("password", password);
+      return getTokenWithExpiry(payload)
+              .compose(res -> res != null ? Future.succeededFuture(res) : getTokenLegacy(payload));
+    });
   }
 
   public Future<HttpRequest<Buffer>> getToken(HttpRequest<Buffer> request) {

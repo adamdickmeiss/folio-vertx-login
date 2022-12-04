@@ -19,7 +19,7 @@ For each request (per request, per tenant), create a `TokenClient`:
    String password = "..."; // system password presumably
    TokenClient tokenClient = new TokenClient(
            okapiUrl, webClient, tokenCache, tenant, user,
-           password);
+           () -> Future.succeededFuture(password));
 
 ```
 
