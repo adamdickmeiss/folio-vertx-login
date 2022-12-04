@@ -15,11 +15,11 @@ For each request (per request, per tenant), create a `TokenClient`:
 ```java
    String okapiUrl = "...";
    String tenant = "...";
-   String user = "myuser"; // system user presumably
+   String user = "..."; // system user presumably
    String password = "..."; // system password presumably
    TokenClient tokenClient = new TokenClient(
            okapiUrl, webClient, tokenCache, tenant, user,
-           () -> Future.succeededFuture(password));
+           password);
 
 ```
 

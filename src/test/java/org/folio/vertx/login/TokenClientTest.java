@@ -175,7 +175,7 @@ public class TokenClientTest {
   public void nullCache(TestContext context) {
     Buffer xmlBody = Buffer.buffer("<hi/>");
     TokenClient tokenClient = new TokenClient(OKAPI_URL, webClient, null /* cache */,
-        TENANT_OK, USER_OK, () -> Future.succeededFuture(PASSWORD_OK));
+        TENANT_OK, USER_OK, PASSWORD_OK);
     tokenClient.getToken(webClient.postAbs(OKAPI_URL + "/echo")
             .putHeader("Content-Type", "text/xml")
             .expect(ResponsePredicate.SC_CREATED))
@@ -193,7 +193,8 @@ public class TokenClientTest {
   public void nullPassword(TestContext context) {
     Buffer xmlBody = Buffer.buffer("<hi/>");
     TokenClient tokenClient = new TokenClient(OKAPI_URL, webClient, tokenCache,
-        TENANT_OK, USER_OK, () -> Future.succeededFuture(null));
+        TENANT_OK, USER_OK, null);
+
     tokenClient.getToken(webClient.postAbs(OKAPI_URL + "/echo")
             .putHeader("Content-Type", "text/xml")
             .expect(ResponsePredicate.SC_BAD_REQUEST))
@@ -211,7 +212,7 @@ public class TokenClientTest {
   public void legacy(TestContext context) {
     Buffer xmlBody = Buffer.buffer("<hi/>");
     TokenClient tokenClient = new TokenClient(OKAPI_URL, webClient, tokenCache,
-        TENANT_OK, USER_OK, () -> Future.succeededFuture(PASSWORD_OK));
+        TENANT_OK, USER_OK, PASSWORD_OK);
     Future<Void> f = Future.succeededFuture();
     f = f.compose(x -> tokenClient.getToken(webClient.postAbs(OKAPI_URL + "/echo")
             .putHeader("Content-Type", "text/xml")
@@ -237,7 +238,7 @@ public class TokenClientTest {
     enableLoginWithExpiry = true;
     Buffer xmlBody = Buffer.buffer("<hi/>");
     TokenClient tokenClient = new TokenClient(OKAPI_URL, webClient, tokenCache,
-        TENANT_OK, USER_OK, () -> Future.succeededFuture(PASSWORD_OK));
+        TENANT_OK, USER_OK, PASSWORD_OK);
     Future<Void> f = Future.succeededFuture();
     f = f.compose(x -> tokenClient.getToken(webClient.postAbs(OKAPI_URL + "/echo")
             .putHeader("Content-Type", "text/xml")
@@ -263,7 +264,7 @@ public class TokenClientTest {
     enableLoginWithExpiry = true;
     Buffer xmlBody = Buffer.buffer("<hi/>");
     TokenClient tokenClient = new TokenClient(OKAPI_URL, webClient, tokenCache,
-        TENANT_OK, USER_OK, () -> Future.succeededFuture("bad"));
+        TENANT_OK, USER_OK, "bad");
     tokenClient.getToken(webClient.postAbs(OKAPI_URL + "/echo")
             .putHeader("Content-Type", "text/xml")
             .expect(ResponsePredicate.SC_BAD_REQUEST))
