@@ -3,12 +3,31 @@ package org.folio.vertx.tokencache;
 import org.folio.vertx.tokencache.impl.TokenCacheImpl;
 
 public interface TokenCache {
+  /**
+   * Create a cache with given capacity.
+   * @param capacity number of tokens kept before they are removed at put
+   * @return cache instance.
+   */
   static TokenCache create(int capacity) {
     return new TokenCacheImpl(capacity);
   }
 
-  void put(String tenant, String user, String value, long expires);
+  /**
+   * Put a cache value for tenant and user.
+   * @param tenant Okapi tenant
+   * @param user user within tenant
+   * @param value typically a token; should not be null
+   * @param expiresTimeMillis the point where the entry expires.
+   */
+  void put(String tenant, String user, String value, long expiresTimeMillis);
 
+
+  /**
+   * Get a cache entry.
+   * @param tenant
+   * @param user
+   * @return value if found; null if not found
+   */
   String get(String tenant, String user);
 
 }

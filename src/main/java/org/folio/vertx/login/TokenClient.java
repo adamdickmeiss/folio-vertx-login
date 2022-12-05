@@ -35,6 +35,15 @@ public class TokenClient {
    */
   private static final long AGE_DIFF_TOKEN = 10L;
 
+  /**
+   * Construct client. Used normally for each incoming request.
+   * @param okapiUrl OKAPI URL for to use for getting token
+   * @param client WebClient
+   * @param cache token cache; maybe null for no cache (testing ONLY)
+   * @param tenant Okapi tenant
+   * @param username username to use for getting token
+   * @param getPasswordSupplier for providing the password
+   */
   public TokenClient(String okapiUrl, WebClient client, TokenCache cache, String tenant, String username,
           Supplier<Future<String>> getPasswordSupplier) {
     this.cache = cache;
@@ -92,6 +101,10 @@ public class TokenClient {
         });
   }
 
+  /**
+   * Get token. Use normally for each outgoing request.
+   * @return token value or null if none could be obtained.
+   */
   public Future<String> getToken() {
     if (cache != null) {
       String cacheValue;
@@ -114,6 +127,11 @@ public class TokenClient {
     });
   }
 
+  /**
+   * Populate token for WebClient request. Normally used for each outgoing request.
+   * @param request the value that is returned for WebClient,getAbs and others.
+   * @return request future result
+   */
   public Future<HttpRequest<Buffer>> getToken(HttpRequest<Buffer> request) {
     return getToken().map(token -> {
       if (token != null) {
